@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create User</title>
+  <style>
+    body,
+    html {
+      height: auto;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 250px;
+    }
+
+    label {
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 90%;
+    }
+
+    input[type="submit"],
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      width: 90%;
+    }
+
+    input[type="submit"]:hover,
+    button:hover {
+      background-color: #45a049;
+    }
+
+    table {
+      width: auto;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid #ddd;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .user-data {
+      width: 250px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4CAF50; /* Green background */
+      color: white; /* White text */
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 9999; /* Ensure it's above other content */
+    }
+
+  </style>
+  <title>Socket.IO Live User</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+  <form id="createUserForm">
+    <h1>Create User</h1>
+
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" name="firstName" required pattern="[A-Za-z\s]+"
+      title="Only alphabets are allowed">
+
+    <label for="lastName">Last Name:</label>
+    <input type="text" id="lastName" name="lastName" required pattern="[A-Za-z\s]+" title="Only alphabets are allowed">
+
+    <label for="mobileNo">Mobile Number:</label>
+    <input type="text" id="mobileNo" name="mobileNo" pattern="\d{10}" required title="Enter 10 digit mobile number">
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+
+    <label for="street">Street:</label>
+    <input type="text" id="street" name="street" required>
+
+    <label for="city">City:</label>
+    <input type="text" id="city" name="city" required pattern="[A-Za-z\s]+" title="Only alphabets are allowed">
+
+    <label for="state">State:</label>
+    <input type="text" id="state" name="state" required pattern="[A-Za-z\s]+" title="Only alphabets are allowed">
+
+    <label for="country">Country:</label>
+    <input type="text" id="country" name="country" required pattern="[A-Za-z\s]+" title="Only alphabets are allowed">
+
+    <label for="loginId">Login ID:</label>
+    <input type="text" id="loginId" name="loginId" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <input type="submit" value="Save">
+    <button type="button" id="showData">Show Data</button>
+    <button type="button" id="joinRoom">Join Room</button>
+  </form>
+
+  <form id="userForm" style="display:none;">
+    <h2>Enter Registered Details</h2>
+    <input type="email" id="formEmail" placeholder="Email" required>
+    <button type="submit">Join</button>
+  </form>
+
+  <div id="userData" class="user-data"></div>
+</body>
+
+</html>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('#createUserForm').show();
+    $('#userForm').hide();
+    $('#createUserForm').submit(function (event) {
+      event.preventDefault();
+
+      const formData = {
+        firstName: $('#firstName').val(),
+        lastName: $('#lastName').val(),
+        mobileNo: $('#mobileNo').val(),
+        email: $('#email').val(),
+        address: {
+          street: $('#street').val(),
+          city: $('#city').val(),
+          state: $('#state').val(),
+          country: $('#country').val()
+        },
+        loginId: $('#loginId').val(),
+        password: $('#password').val()
+      };
+
+      $.ajax({
+        type: 'POST',
+        // url: 'https://node-task-m7sx.onrender.com/server/create',
+        url: '/server/create',
+       
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (data) {
+          alert('User created successfully!');
+          $('#createUserForm')[0].reset();
+          $('#userForm').hide();
+        },
+        error: function (error) {
+          alert('Error creating user: ');
+        }
+      });
+    });
+
+    $('#showData').on('click', function () {
+      $.ajax({
+        url: '/server/display_data',
+        //url: 'http://localhost:3003/server/display_data',
+        method: 'GET',
+        success: function (response) {
+          let table = '<h2>User Data</h2><table><tr><th>First Name</th><th>Last Name</th><th>Mobile No</th><th>Email</th><th>Street</th><th>City</th><th>State</th><th>Country</th><th>Login ID</th></tr>';
+          response.forEach(user => {
+            table += `<tr>
+                          <td>${user.firstName}</td>
+                          <td>${user.lastName}</td>
+                          <td>${user.mobileNo}</td>
+                          <td>${user.email}</td>
+                          <td>${user.address.street}</td>
+                          <td>${user.address.city}</td>
+                          <td>${user.address.state}</td>
+                          <td>${user.address.country}</td>
+                          <td>${user.loginId}</td>
+                        </tr>`;
+          });
+          table += '</table>';
+          $('.user-data').html(table).show();
+          $('#createUserForm').hide();
+          $('#userForm').hide();
+        },
+        error: function (error) {
+          alert('Error fetching users');
+        }
+      });
+
+
+      $('#showData').click(function () {
+        window.open('https://node-task-m7sx.onrender.com/server/display_data', '_blank');
+      });
+    });
+
+  });
+  $('#joinRoom').click(function () {
+    $('#createUserForm').hide();
+    $('#userForm').show();
+  });
+
+
+  const socket = io();
+  socket.on('new-user', function (liveUsers) {
+    const liveUsersList = $('#liveUsers');
+    liveUsersList.empty();
+    for (let socketId in liveUsers) {
+      const user = liveUsers[socketId];
+      const li = $('<li>').text(`Name: ${user.name}, Email: ${user.email}, Socket ID: ${user.socketId}`);
+      liveUsersList.append(li);
+
+    }
+  });
+  
+  $('#userForm').on('submit', function (e) {
+    e.preventDefault();
+    const email = $('#formEmail').val();
+
+    $.ajax({
+      // url: 'https://node-task-m7sx.onrender.com/checkUser',
+      url:'/checkUser',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ email }),
+      success: function (response) {
+        if (response.exists) {
+          const userData = response.user;
+          $('#userData').html(`
+        <h3>User Details</h3>
+                <p>Email: ${userData.email}</p>
+                <p>Name: ${userData.firstName} ${userData.lastName}</p>
+                <p>Socket ID: ${userData.socketId}</p>
+        `).show();
+
+        // Show the popup for 5 seconds
+       const popup = $('<div class="popup">JOINED ' + userData.firstName + ' ' + userData.lastName + '</div>');
+              $('body').append(popup);
+              setTimeout(function () {
+                popup.remove();
+              }, 5000);
+          socket.emit('join-live-user', { email: userData.email, name: `${userData.firstName} ${userData.lastName}` });
+        } else {
+          alert('MAIL does not exist. Firstly register then join room');
+        }
+      },
+      error: function (err) {
+        console.error('Error:', err);
+      }
+    });
+  });
+
+  socket.on('user-disconnected', function (socketId) {
+    const liveUsersList = $('#liveUsers');
+    const listItems = liveUsersList.find('li');
+    listItems.each(function () {
+      if ($(this).text().includes(socketId)) {
+        $(this).remove();
+        return false; // break the loop
+      }
+    });
+  });  
+
+  
+</script>
+</body>
+
+</html>
